@@ -37,20 +37,20 @@ CLIENT_OBJ  = $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(CLIENT_SRC))
 all: $(SERVER_NAME) $(CLIENT_NAME)
 
 $(SERVER_NAME): $(SERVER_OBJ)
-    $(CXX) $(SERVER_OBJ) -o $(SERVER_NAME) $(CXXFLAGS)
+	$(CXX) $(SERVER_OBJ) -o $(SERVER_NAME) $(CXXFLAGS)
 
 $(CLIENT_NAME): $(CLIENT_OBJ)
-    $(CXX) $(CLIENT_OBJ) -o $(CLIENT_NAME) $(CXXFLAGS)
+	$(CXX) $(CLIENT_OBJ) -o $(CLIENT_NAME) $(CXXFLAGS)
 
 $(BUILD_DIR)/%.o: %.cpp
-    @mkdir -p $(dir $@)
-    $(CXX) $(CXXFLAGS) -c $< -o $@
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-    rm -rf $(BUILD_DIR)
+	rm -rf $(BUILD_DIR)
 
 fclean: clean
-    rm -f $(SERVER_NAME) $(CLIENT_NAME)
+	rm -f $(SERVER_NAME) $(CLIENT_NAME)
 
 re: fclean all
 
