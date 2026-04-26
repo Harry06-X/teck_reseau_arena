@@ -1,0 +1,4 @@
+build/
+arena_server
+*.o
+*.d
