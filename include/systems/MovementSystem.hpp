@@ -1,14 +1,5 @@
 #pragma once
 
-class MovementSystem {
-public:
-    MovementSystem();
-    ~MovementSystem();
-};
-
-
-#pragma once
-
 #include <string>
 #include <iostream>
 #include "core/ISystem.hpp"
