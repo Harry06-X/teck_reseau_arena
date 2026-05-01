@@ -10,8 +10,8 @@
 
 class Command {
     public:
-        Command();
-        ~Command();
+        Command() = default;
+        ~Command() = default;
 
     protected:
     private:
