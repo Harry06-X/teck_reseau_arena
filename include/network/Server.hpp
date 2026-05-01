@@ -9,14 +9,18 @@
 #define SERVER_HPP_
 
 #include <map>
-class Server {
-    public:
-        Server();
-        ~Server();
+#include <memory>
+#include "./ClientSession.hpp"
+namespace net {
+    class Server {
+        public:
+            Server();
+            ~Server();
 
-    protected:
-    private:
-        std::map<net::ClientAddress, std::unique_ptr<net::ClientSession>> _sessions;
-};
+        protected:
+        private:
+            std::map<net::ClientAddress, std::unique_ptr<net::ClientSession>> _sessions;
+    };
+}
 
 #endif /* !SERVER_HPP_ */
