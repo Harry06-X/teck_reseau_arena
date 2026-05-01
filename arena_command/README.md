@@ -1,1 +1,0 @@
-# teck_reseau_arena
