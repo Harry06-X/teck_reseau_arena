@@ -8,8 +8,8 @@
 #ifndef MOVECOMMAND_HPP_
 #define MOVECOMMAND_HPP_
 
-#include "command/Command.hpp"
-#include "systems/MovementSystem.hpp"
+#include "Command.hpp"
+#include "../systems/MovementSystem.hpp"
 
 class MoveCommand : public Command {
 public:
