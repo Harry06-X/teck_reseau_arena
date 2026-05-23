@@ -2,24 +2,26 @@
 ** EPITECH PROJECT, 2026
 ** teck_reseau_arena
 ** File description:
-** MoveCommand
+** MoveCommand — Commande de déplacement (Pattern Command)
 */
 
 #ifndef MOVECOMMAND_HPP_
 #define MOVECOMMAND_HPP_
-#include "./Command.hpp"
-#include <string>
-#include <cstddef>
+
+#include "command/Command.hpp"
+#include "systems/MovementSystem.hpp"
+
 class MoveCommand : public Command {
-    public:
-        MoveCommand(std::size_t msgId, const std::string& direction);
-        ~MoveCommand();
+public:
+    MoveCommand(ecs::Entity entityId, MovementSystem::Direction dir, ecs::ComponentManager& compManager);
 
-        std::size_t getMsgId()const { return _msgId; }
-        const std::string& getDirection() const { return _direction; }
+    ~MoveCommand() override = default;
 
-    private:
-        std::size_t _msgId;
-        std::string _direction;
+    void execute() override;
+
+private:
+    MovementSystem::Direction _direction;   // Direction demandée
+    MovementSystem _movSystem;   // Instance locale du système
 };
-#endif
+
+#endif /* !MOVECOMMAND_HPP_ */
