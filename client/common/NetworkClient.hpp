@@ -9,6 +9,7 @@
 #define NETWORKCLIENT_HPP_
 
 #include <atomic>
+#include <chrono>
 #include <functional>
 #include <string>
 #include <thread>
@@ -22,10 +23,16 @@
  * Les messages utiles (hors ACK/doublons) sont transmis au callback, appelé
  * depuis le thread de réception. Un message synthétique "UNREACHABLE" signale
  * qu'un envoi n'a jamais été acquitté.
+ * Sans envoi pendant KEEPALIVE_INTERVAL, un PING part pour que le serveur ne
+ * ferme pas la session d'un joueur qui regarde sans jouer.
  */
 class NetworkClient {
 public:
     using Handler = std::function<void(const net::ParsedMessage&)>;
+    using Clock = std::chrono::steady_clock;
+
+    // Bien en dessous du timeout serveur (60 s) : une perte de PING ne suffit pas à expirer
+    static constexpr std::chrono::seconds KEEPALIVE_INTERVAL{20};
 
     NetworkClient(const std::string& host, uint16_t port, double packetLoss, Handler handler);
     ~NetworkClient();
@@ -47,6 +54,7 @@ private:
     net::ReliabilityLayer _reliability;
     Handler _handler;
 
+    std::atomic<Clock::time_point> _lastSend{Clock::now()};
     std::atomic<bool> _running{true};
     std::thread _receiver;
     std::thread _maintenance;

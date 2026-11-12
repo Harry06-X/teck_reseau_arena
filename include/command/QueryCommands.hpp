@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2026
 ** teck_reseau_arena
 ** File description:
-** QueryCommands — STATUS, LOOK
+** QueryCommands — STATUS, LOOK, PING
 */
 
 #ifndef QUERYCOMMANDS_HPP_
@@ -25,6 +25,16 @@ public:
     using Command::Command;
     ~LookCommand() override = default;
 
+    void execute(GameContext& ctx) override;
+};
+
+// PING → seulement l'ACK : keepalive des clients, utilisable avant le LOGIN
+class PingCommand : public Command {
+public:
+    using Command::Command;
+    ~PingCommand() override = default;
+
+    bool requiresLogin() const override { return false; }
     void execute(GameContext& ctx) override;
 };
 

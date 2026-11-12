@@ -46,6 +46,7 @@ void NetworkClient::send(const std::string& type, const std::vector<std::string>
     std::string datagram = net::ProtocolParser::serialize(id, type, fields);
     _reliability.track(id, _server, datagram);
     _socket.send(datagram, _server.toSockaddr());
+    _lastSend = Clock::now();
 }
 
 void NetworkClient::receiveLoop()
@@ -91,5 +92,7 @@ void NetworkClient::maintenanceLoop()
         if (!unreachable.empty())
             _handler({0, "UNREACHABLE", {"Server did not answer after "
                 + std::to_string(net::ReliabilityLayer::MAX_ATTEMPTS) + " attempts, is it running?"}});
+        if (Clock::now() - _lastSend.load() >= KEEPALIVE_INTERVAL)
+            send("PING");
     }
 }
