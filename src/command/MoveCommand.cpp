@@ -5,27 +5,22 @@
 ** MoveCommand
 */
 
-
 #include "command/MoveCommand.hpp"
-#include <iostream>
 
-MoveCommand::MoveCommand(ecs::Entity entityId,
-                         MovementSystem::Direction dir,
-                         ecs::ComponentManager& compManager)
-    : Command(entityId, compManager)   // Appel du constructeur de Command
-    , _direction(dir)                  // Stockage de la direction
+MoveCommand::MoveCommand(uint32_t msgId, const net::ClientAddress& sender, MovementSystem::Direction dir)
+    : Command(msgId, sender), _direction(dir)
 {}
 
-void MoveCommand::execute()
+void MoveCommand::execute(GameContext& ctx)
 {
-    std::cout << "[MoveCommand] execute() — entity " << _playerId << "\n";
+    ecs::Entity me = session(ctx)->getEntityId();
 
-    // Délégation au MovementSystem
-    bool moved = _movSystem.update(_playerId, _direction, _compManager);
-
-    if (!moved) {
-        // Le mouvement était invalide (bord de carte) : on l'ignore silencieusement.
-        // Le serveur peut choisir d'envoyer un ERROR au client ici si besoin.
-        std::cout << "[MoveCommand] Mouvement bloqué pour entity " << _playerId << "\n";
+    if (!ctx.game.isAlive(me)) {
+        error(ctx, "You are dead, respawn in " + std::to_string(ctx.game.respawnIn(me)) + "s");
+        return;
     }
+    // Délégation au MovementSystem (bornes 0..19 gérées par le système)
+    if (!ctx.game.move(me, _direction))
+        error(ctx, "Blocked by the arena border");
+    sendState(ctx, me);
 }

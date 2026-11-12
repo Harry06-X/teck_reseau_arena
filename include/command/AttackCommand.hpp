@@ -2,24 +2,23 @@
 ** EPITECH PROJECT, 2026
 ** teck_reseau_arena
 ** File description:
-** AttackCommand
+** AttackCommand — ATTACK|player_id
 */
 
 #ifndef ATTACKCOMMAND_HPP_
 #define ATTACKCOMMAND_HPP_
-#include "./Command.hpp"
-#include <string>
-#include <cstddef>
+
+#include "Command.hpp"
+
 class AttackCommand : public Command {
-    public:
-        AttackCommand(std::size_t msgId, const std::string& targetId);
-        ~AttackCommand();
+public:
+    AttackCommand(uint32_t msgId, const net::ClientAddress& sender, ecs::Entity target);
+    ~AttackCommand() override = default;
 
-        std::size_t getMsgId()const {return _msgId;}
-        const std::string& getTargetId() const {return _targetId;}
+    void execute(GameContext& ctx) override;
 
-    private:
-        std::size_t _msgId;
-        std::string _targetId;
+private:
+    ecs::Entity _target;
 };
-#endif
+
+#endif /* !ATTACKCOMMAND_HPP_ */

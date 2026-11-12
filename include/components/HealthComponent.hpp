@@ -12,19 +12,4 @@ struct HealthComponent {
     int hp = 100; // Valeur initiale imposée par les règles du jeu
 };
 
-// class HealthComponent {
-//     public:
-//         HealthComponent();
-//         ~HealthComponent();
-
-//     protected:
-//     private:
-// };
-
-// #endif /* !HEALTHCOMPONENT_HPP_ */
-
-// #ifndef HEALTH_COMPONENT_HPP_
-// #define HEALTH_COMPONENT_HPP_
-
-
-#endif /* !HEALTH_COMPONENT_HPP_ */
+#endif /* !HEALTHCOMPONENT_HPP_ */

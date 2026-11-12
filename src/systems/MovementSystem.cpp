@@ -1,8 +1,12 @@
-#include "../../include/systems/MovementSystem.hpp"
+/*
+** EPITECH PROJECT, 2026
+** teck_reseau_arena
+** File description:
+** MovementSystem
+*/
 
-MovementSystem::MovementSystem() {}
+#include "systems/MovementSystem.hpp"
 
-MovementSystem::~MovementSystem() {}
 // -----------------------------------------------------------------------------
 // parseDirection
 // -----------------------------------------------------------------------------

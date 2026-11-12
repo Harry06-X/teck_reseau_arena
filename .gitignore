@@ -1,4 +1,8 @@
 build/
 arena_server
+arena_client
+arena_gui
+users.db
 *.o
 *.d
+__pycache__/
