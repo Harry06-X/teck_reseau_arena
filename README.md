@@ -5,9 +5,14 @@
 ![CMake](https://img.shields.io/badge/Build-CMake-064F8C?logo=cmake&logoColor=white)
 ![Tests](https://img.shields.io/badge/E2E%20tests-39%20checks-brightgreen)
 
-**Multiplayer UDP game server and terminal client in C++20**, built for the Tek-Réseau association (2nd-year project).
+**Multiplayer UDP game server with a terminal client and an SFML graphical client, in C++20**, built for the Tek-Réseau association (2nd-year project).
 
 Players create an account, log in, enter a **20×20 arena**, move, attack each other and score points. The server is the **single authority** on the game state. All traffic goes over **UDP**, with a home-made reliability layer on top: message IDs, ACKs, timeouts, retransmission and duplicate detection.
+
+![Arena Command graphical client](docs/gui-arena.png)
+
+<details>
+<summary>Terminal client</summary>
 
 ```
 === ARENA COMMAND ===  alice  HP 80  pos (6,4)  score 1
@@ -21,6 +26,7 @@ Players:
   [0] alice WARRIOR  80 HP  (6,4)  score 1  <- you
   [1] bob ARCHER  100 HP  (8,4)  score 0
 ```
+</details>
 
 ## Features
 
@@ -32,12 +38,13 @@ Players:
 | Authentication | `REGISTER` / `LOGIN` with PBKDF2-SHA256 + random salt, persistent accounts, one session per account |
 | Sessions | Identified by IP + port, 60 s inactivity timeout, clean `LOGOUT` |
 | Security | Strict input validation (format, length, charset), brute-force limit (5 failed logins per IP per minute) |
-| Client | Interactive terminal client with a live 20×20 ASCII grid, WASD/ZQSD shortcuts |
+| Terminal client | Interactive CLI with a live 20×20 ASCII grid, WASD/ZQSD shortcuts |
+| Graphical client (bonus) | SFML window: login form, live arena, range overlay, click-to-attack, HP bars, scoreboard, respawn countdown |
 | Testing | 39-check end-to-end test suite over real UDP, plus a packet-loss simulation flag |
 
 ## Build
 
-Requirements: Linux, a C++20 compiler (g++ ≥ 10 or clang ≥ 12), CMake ≥ 3.10 and OpenSSL (`libssl-dev`).
+Requirements: Linux, a C++20 compiler (g++ ≥ 10 or clang ≥ 12), CMake ≥ 3.10, OpenSSL (`libssl-dev`), and SFML 2.5+ (`libsfml-dev`) for the graphical client. If SFML is missing, only `arena_gui` is skipped.
 
 ```bash
 make            # = cmake -S . -B build && cmake --build build
@@ -45,7 +52,7 @@ make re         # full rebuild
 make tests_run  # build + end-to-end tests (needs python3)
 ```
 
-The build produces `arena_server` and `arena_client` at the repository root.
+The build produces `arena_server`, `arena_client` and `arena_gui` at the repository root.
 
 ## Run
 
@@ -55,8 +62,30 @@ The build produces `arena_server` and `arena_client` at the repository root.
 ./arena_client 192.168.1.20 4242    # another machine
 ```
 
+```bash
+./arena_gui                         # graphical client (run it from the repository root)
+./arena_gui 192.168.1.20 4242 --user alice --password secret --archer
+```
+
 Server options: `-p PORT`, `--users FILE`, `--timeout SECONDS`, `--loss RATIO`, `--seed N`.
-Client options: `[HOST] [PORT] --loss RATIO`.
+Terminal client options: `[HOST] [PORT] --loss RATIO`.
+Graphical client options: `[HOST] [PORT] --loss RATIO --user NAME --password PASS [--archer] [--register] [--screenshot FILE --delay S]`.
+
+### Graphical client (bonus)
+
+| Login | In game | Eliminated |
+|---|---|---|
+| ![Login](docs/gui-login.png) | ![Arena](docs/gui-arena.png) | ![Eliminated](docs/gui-combat.png) |
+
+| Input | Action |
+|---|---|
+| Arrows, WASD or ZQSD | Move |
+| Click on a player | `ATTACK` that player |
+| Space | Attack the nearest enemy in range |
+| L | `LOOK` (refresh the arena) |
+| Esc | `LOGOUT` |
+
+Your attack range is highlighted around your token. A hovered enemy turns red when you can click to attack it, and a token flashes red when it takes damage. `--screenshot` renders off-screen without opening a window, which is how the images above were produced.
 
 ### Client commands
 
@@ -153,7 +182,10 @@ include/ src/
 ├── command/    Command (abstract) + 7 commands + factory   Command pattern
 ├── auth/       AccountManager                              accounts and hashing
 └── network/    UdpSocket, ProtocolParser, ReliabilityLayer, ClientSession, CommandQueue, Server
-client/         Client, ArenaView, main                     terminal client
+client/common/  NetworkClient, ClientState                 shared client core (reliable link + game view)
+client/cli/     Client, ArenaView                           terminal client
+client/gui/     GuiApp                                      SFML graphical client
+assets/fonts/   DejaVu Sans                                 GUI font (free licence, see LICENSE-DejaVu.txt)
 tests/          e2e_test.py                                 end-to-end tests
 ```
 
@@ -276,6 +308,7 @@ sequenceDiagram
 - **ECS + inheritance.** Game data lives in the ECS (`ComponentManager`, an `unordered_map` per component type), while the class-specific behaviour (`getAttackRange`) uses the `Player` → `Warrior`/`Archer` hierarchy. This gives us both the required OOP concepts and a data layout that stays easy to extend.
 - **Command pattern.** The network thread only parses and validates input. `CommandFactory` builds the `unique_ptr<Command>` and the game thread executes it. `Command::run()` is a template method that handles the login check, activity tracking and exceptions in one place, so every command implements only `execute()`.
 - **`IResponder` interface.** Commands send replies without knowing about sockets, which keeps the game logic testable and decoupled from the network.
+- **One client core, two front ends.** `NetworkClient` (protocol and reliability) and `ClientState` (the game as seen by the player) are shared by the terminal and SFML clients. In the GUI, the network thread only pushes messages into a mutex-protected queue, and the render thread applies them every frame, so no drawing code ever needs a lock.
 - **`std::map` keyed by message ID** for pending packets, giving ordered, cheap removal on ACK. **`std::unordered_set`** gives O(1) duplicate detection.
 - **RAII everywhere.** `UdpSocket` closes its descriptor in its destructor, `Server` joins its threads, and `std::unique_ptr` owns commands, players and sessions.
 - **Exceptions** (`SocketError`, `ProtocolError`) for invalid input and system failures. A malformed datagram never crashes the server: it gets an `ERROR` reply.
