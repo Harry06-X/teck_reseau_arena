@@ -13,7 +13,7 @@ clean:
 	rm -rf build
 
 fclean: clean
-	rm -f arena_server arena_client
+	rm -f arena_server arena_client arena_gui
 
 re: fclean all
 
