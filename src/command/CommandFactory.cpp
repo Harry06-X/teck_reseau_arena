@@ -76,5 +76,9 @@ std::unique_ptr<Command> CommandFactory::create(const net::ParsedMessage& msg, c
         expectFields(msg, 0, 0, "LOGOUT");
         return std::make_unique<LogoutCommand>(id, sender);
     }
+    if (msg.type == "PING") {
+        expectFields(msg, 0, 0, "PING");
+        return std::make_unique<PingCommand>(id, sender);
+    }
     throw net::ProtocolError("Unknown command " + msg.type);
 }

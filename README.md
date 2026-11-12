@@ -36,7 +36,7 @@ Players:
 | Classes | `Warrior` (melee, range 1) and `Archer` (range 3), both inheriting from the abstract `Player` |
 | UDP reliability | Unique message IDs, `ACK`, 3 s timeout, retransmission (up to 5 sends), duplicate filtering |
 | Authentication | `REGISTER` / `LOGIN` with PBKDF2-SHA256 + random salt, persistent accounts, one session per account |
-| Sessions | Identified by IP + port, 60 s inactivity timeout, clean `LOGOUT` |
+| Sessions | Identified by IP + port, 60 s inactivity timeout, clients send a `PING` after 20 s without input, clean `LOGOUT` |
 | Security | Strict input validation (format, length, charset), brute-force limit (5 failed logins per IP per minute) |
 | Terminal client | Interactive CLI with a live 20×20 ASCII grid, WASD/ZQSD shortcuts |
 | Graphical client (bonus) | SFML window: login form, live arena, range overlay, click-to-attack, HP bars, scoreboard, respawn countdown |
@@ -130,6 +130,7 @@ MSGID|TYPE|FIELD1|FIELD2|...
 | `STATUS` | — | `STATE` |
 | `LOOK` | — | `GAME_UPDATE` |
 | `LOGOUT` | — | `OK\|Goodbye alice` |
+| `PING` | — | `ACK` only. Keep-alive, also accepted before `LOGIN` |
 
 ### Server → client
 
@@ -169,6 +170,8 @@ server → 3|ERROR|bob is out of range (your range: 3)
 | Duplicates | A per-peer `unordered_set` of received IDs, bounded with a FIFO to 1024 IDs. A duplicate is ACKed again but never executed twice. |
 
 `GAME_UPDATE` is deliberately **unreliable**: each update replaces the previous one, so retransmitting an outdated state would be pointless. It is broadcast at most every 100 ms when something changes, plus a 2 s keep-alive that makes up for losses.
+
+In the other direction, the clients send a reliable `PING` when the player has sent nothing for 20 s. A player who is only watching therefore keeps their session, while a client that crashed or lost the network still expires after the 60 s timeout.
 
 ## Architecture
 

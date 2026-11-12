@@ -215,11 +215,15 @@ def run_scenarios(users):
     carol.request("LOGIN", "carol", "pass1234", contains="Welcome")
     check(alice.request("LOGOUT", contains="Goodbye") is not None, "LOGOUT -> OK")
     check(alice.request("STATUS", reply="ERROR", contains="Not logged in") is not None, "session closed after LOGOUT")
-    for _ in range(4):  # keep bob active while carol idles
-        bob.state()
-        time.sleep(4)
+    bob.inbox.clear()
+    pings = []
+    for _ in range(4):  # bob only sends PING (keepalive) while carol idles
+        pings.append(bob.send("PING"))
+        bob.pump(4)
+    check(all(p in bob.acks for p in pings), "PING is acknowledged")
+    check(not any(m[1] in ("OK", "ERROR", "STATE") for m in bob.inbox), "PING gets no answer besides the ACK")
     check(carol.expect("ERROR", "timed out", timeout=2) is not None, "idle session timed out")
-    check(bob.state() is not None, "active session kept alive")
+    check(bob.state() is not None, "PING keeps the session alive")
 
     print("Brute-force protection")
     eve = Peer(PORT)

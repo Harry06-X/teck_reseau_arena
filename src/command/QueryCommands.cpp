@@ -16,3 +16,8 @@ void LookCommand::execute(GameContext& ctx)
 {
     reply(ctx, "GAME_UPDATE", {ctx.game.serialize()});
 }
+
+// L'ACK part de la couche réseau et Command::run a déjà rafraîchi la session
+void PingCommand::execute(GameContext&)
+{
+}
