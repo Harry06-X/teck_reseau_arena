@@ -36,7 +36,6 @@ public:
     // Retourne true si le mouvement a été appliqué, false si bloqué par les bords.
     bool update(ecs::Entity entityId, Direction dir, ecs::ComponentManager& compManager);
 
-private:
     // Taille de la grille (les positions valides sont [0, GRID_SIZE - 1])
     static constexpr int GRID_SIZE = 20;
 };

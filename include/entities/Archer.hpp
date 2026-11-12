@@ -5,29 +5,19 @@
 ** Archer
 */
 
-
 #ifndef ARCHER_HPP_
 #define ARCHER_HPP_
 
 #include "Player.hpp"
-#include "components/HealthComponent.hpp"
-#include "components/PositionComponent.hpp"
 
-class Archer : public Player { // Héritage obligatoire
+// Tireur à distance : attaque jusqu'à 3 cases
+class Archer : public Player {
 public:
-    explicit Archer(ecs::Entity entityId) : Player(entityId) {}
-    ~Archer() override = default; // Utilisation de override
+    Archer(ecs::Entity entityId, std::string username) : Player(entityId, std::move(username)) {}
+    ~Archer() override = default;
 
-    // Implémentation du polymorphisme
-    void initialize(ecs::ComponentManager& compManager) override {
-        // Règles du jeu : 100 HP
-        compManager.addComponent(_entityId, HealthComponent{100});
-        
-        // Position initiale (à déterminer par le Game)
-        compManager.addComponent(_entityId, PositionComponent{0, 0});
-        
-        // Tu pourras ajouter d'autres composants ici (Score, etc.)
-    }
+    int getAttackRange() const override { return 3; }
+    std::string getClassName() const override { return "ARCHER"; }
 };
 
-#endif /* !Archer_HPP_ */
+#endif /* !ARCHER_HPP_ */
