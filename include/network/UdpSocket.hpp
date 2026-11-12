@@ -2,37 +2,59 @@
 ** EPITECH PROJECT, 2026
 ** teck_reseau_arena
 ** File description:
-** UdpSocket
+** UdpSocket — wrapper RAII autour d'un socket UDP
 */
 
 #ifndef UDPSOCKET_HPP_
 #define UDPSOCKET_HPP_
 
 #include <netinet/in.h>
+#include <cstdint>
+#include <mutex>
+#include <random>
+#include <stdexcept>
 #include <string>
-#include <iostream>
-#include <unistd.h>
-#include <cstring>
-#include <arpa/inet.h>
 
 namespace net {
+
+    class SocketError : public std::runtime_error {
+    public:
+        using std::runtime_error::runtime_error;
+    };
+
     class UdpSocket {
     public:
-        UdpSocket();
-        ~UdpSocket();
+        static constexpr std::size_t MAX_DATAGRAM_SIZE = 4096;
 
-        // Ouvre le socket et le lie à un port
-        bool bind(int port);
-        
-        // Envoi/Réception basique
-        ssize_t sendTo(const std::string& message, const struct sockaddr_in& dest);
-        ssize_t receiveFrom(char* buffer, size_t size, struct sockaddr_in& src);
+        UdpSocket();   // lève SocketError
+        ~UdpSocket();  // RAII : ferme le descripteur
 
-        int getFd() const { return _fd; }
+        UdpSocket(const UdpSocket&) = delete;
+        UdpSocket& operator=(const UdpSocket&) = delete;
+
+        // Lie le socket à un port local (côté serveur)
+        void bind(uint16_t port);
+
+        // sendto() est thread-safe : plusieurs threads peuvent envoyer en parallèle
+        bool send(const std::string& data, const sockaddr_in& dest);
+
+        // Attend au plus timeoutMs un datagramme (poll). Retourne false si rien reçu.
+        bool receive(std::string& out, sockaddr_in& from, int timeoutMs);
+
+        // Simule une perte de paquets (0.0 → 1.0) pour tester la fiabilité
+        void setSimulatedLoss(double ratio);
 
     private:
-        int _fd; // Le descripteur de fichier du socket
+        bool shouldDrop();
+
+        int _fd;
+        double _lossRatio = 0.0;
+        std::mt19937 _rng;
+        std::mutex _rngMutex;
     };
+
+    // Résout "host" (IP ou nom) en adresse IPv4 — lève SocketError
+    sockaddr_in resolve(const std::string& host, uint16_t port);
 }
 
 #endif /* !UDPSOCKET_HPP_ */
